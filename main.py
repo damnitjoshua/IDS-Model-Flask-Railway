@@ -10,6 +10,8 @@ app = Flask(__name__)
 csv_url = "https://drive.google.com/file/d/1tIxt00bOAPEKRkc57uuBhPZGDLBwsvJc/view?usp=share_link"
 csv_url = 'https://drive.google.com/uc?id=' + csv_url.split('/')[-2]
 RatingCountDF = pd.read_csv(csv_url)
+RatingCountDFPivot = RatingCountDF.pivot(
+    index='ISBN', columns='UserID', values='Rating').fillna(0)
 
 
 @app.route('/')
@@ -36,6 +38,29 @@ def random(count):
         })
 
     return jsonify(books)
+
+
+@app.route('/knn/<ISBN>')
+def knn(ISBN):
+    model = load("model/knn_bookRecom_model.sav")
+    search = RatingCountDFPivot.loc[ISBN]
+
+    distances, indices = model.kneighbors(
+        search.values.reshape(1, -1), n_neighbors=6)
+
+    books = []
+
+    for i in range(0, len(distances.flatten())):
+        if i != 0:
+            book = RatingCountDF.iloc[indices.flatten()[i]]
+            books.append({
+                "title": book['Title'],
+                "isbn": book['ISBN'],
+                "image": book['Image'],
+                "distance": distances.flatten()[i]
+            })
+
+    return jsonify(books[::-1])
 
 
 if __name__ == '__main__':
