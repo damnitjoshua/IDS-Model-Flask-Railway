@@ -35,7 +35,7 @@ def random(count):
             "yearOfPublication": str(book["YearOfPublication"])
         })
 
-    return books
+    return jsonify(books)
 
 
 if __name__ == '__main__':
