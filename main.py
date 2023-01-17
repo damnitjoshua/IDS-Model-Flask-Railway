@@ -10,8 +10,10 @@ app = Flask(__name__)
 csv_url = "https://drive.google.com/file/d/1tIxt00bOAPEKRkc57uuBhPZGDLBwsvJc/view?usp=share_link"
 csv_url = 'https://drive.google.com/uc?id=' + csv_url.split('/')[-2]
 RatingCountDF = pd.read_csv(csv_url)
-RatingCountDFPivot = RatingCountDF.pivot(
-    index='ISBN', columns='UserID', values='Rating').fillna(0)
+
+pivot_url = "https://drive.google.com/file/d/1f1VxuzoHvbjeizxSY8G_EVSjEC4MfbGw/view?usp=share_link"
+pivot_url = 'https://drive.google.com/uc?id=' + pivot_url.split('/')[-2]
+RatingCountDFPivot = pd.read_csv(pivot_url)
 
 
 @app.route('/')
