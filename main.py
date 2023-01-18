@@ -13,9 +13,9 @@ csv_url = "https://drive.google.com/file/d/1tIxt00bOAPEKRkc57uuBhPZGDLBwsvJc/vie
 csv_url = 'https://drive.google.com/uc?id=' + csv_url.split('/')[-2]
 RatingCountDF = pd.read_csv(csv_url)
 
-# pivot_url = "https://drive.google.com/file/d/1fmmByHYX0xBDgZCZkMCMS-zWWnlK-Cij/view?usp=share_link"
-# pivot_url = 'https://drive.google.com/uc?id=' + pivot_url.split('/')[-2]
-# RatingCountDFPivot = pd.read_csv("data/RatingCountDFPivotDF1.csv")
+pivot_url = "https://drive.google.com/file/d/1fmmByHYX0xBDgZCZkMCMS-zWWnlK-Cij/view?usp=share_link"
+pivot_url = 'https://drive.google.com/uc?id=' + pivot_url.split('/')[-2]
+RatingCountDFPivot = pd.read_csv(pivot_url)
 
 
 @app.route('/')
@@ -46,27 +46,30 @@ def random(count):
 
 @app.route('/knn/<ISBN>')
 def knn(ISBN):
-    RatingCountDFPivot = RatingCountDF.pivot(
-        index='ISBN', columns='UserID', values='Rating').fillna(0)
+    try:
+        # RatingCountDFPivot = RatingCountDF.pivot(
+        #     index='ISBN', columns='UserID', values='Rating').fillna(0)
 
-    search = RatingCountDFPivot.loc[ISBN]
+        search = RatingCountDFPivot.loc[ISBN]
 
-    distances, indices = model.kneighbors(
-        search.values.reshape(1, -1), n_neighbors=6)
+        distances, indices = model.kneighbors(
+            search.values.reshape(1, -1), n_neighbors=6)
 
-    books = []
+        books = []
 
-    for i in range(0, len(distances.flatten())):
-        if i != 0:
-            book = RatingCountDF.iloc[indices.flatten()[i]]
-            books.append({
-                "title": book['Title'],
-                "isbn": book['ISBN'],
-                "image": book['Image'],
-                "distance": distances.flatten()[i]
-            })
+        for i in range(0, len(distances.flatten())):
+            if i != 0:
+                book = RatingCountDF.iloc[indices.flatten()[i]]
+                books.append({
+                    "title": book['Title'],
+                    "isbn": book['ISBN'],
+                    "image": book['Image'],
+                    "distance": distances.flatten()[i]
+                })
 
-    return jsonify(books[::-1])
+        return jsonify(books[::-1])
+    except Exception as e:
+        return jsonify(e)
 
 
 if __name__ == '__main__':
