@@ -16,7 +16,7 @@ RatingCountDFPivot = RatingCountDF.pivot(
     index='ISBN', columns='UserID', values='Rating').fillna(0)
 
 SVDPivot = RatingCountDF.pivot(
-    index='UserID', columns='Title', values='Rating').fillna(0)
+    index='UserID', columns='ISBN', values='Rating').fillna(0)
 
 SVD = TruncatedSVD(n_components=12, random_state=17)
 matrix = SVD.fit_transform(SVDPivot.values.T)
@@ -36,16 +36,16 @@ def random(count):
 
     for i in range(int(count)):
         query_index = np.random.choice(RatingCountDF.shape[0])
-        book = RatingCountDF.iloc[query_index]
+        book = RatingCountDF.iloc[query_index].to_dict()
         books.append({
             "title": book['Title'],
             "author": book['Author'],
             "isbn": book['ISBN'],
             "image": book['Image'],
             "category": book["Category"][2:-2],
-            "rating": str(book['Rating']),
-            "ratingCount": str(book["RatingCount"]),
-            "yearOfPublication": str(book["YearOfPublication"])
+            "rating": book['Rating'],
+            "ratingCount": book['RatingCount'],
+            "yearOfPublication": book['YearOfPublication']
         })
 
     return jsonify(books)
@@ -63,11 +63,17 @@ def knn(ISBN):
 
         for i in range(0, len(distances.flatten())):
             if i != 0:
-                book = RatingCountDF.iloc[indices.flatten()[i]]
+                book = RatingCountDF.iloc[indices.flatten()[i]].to_dict()
+
                 books.append({
                     "title": book['Title'],
+                    "author": book['Author'],
                     "isbn": book['ISBN'],
                     "image": book['Image'],
+                    "category": book["Category"][2:-2],
+                    "rating": book['Rating'],
+                    "ratingCount": book['RatingCount'],
+                    "yearOfPublication": book['YearOfPublication'],
                     "distance": distances.flatten()[i]
                 })
 
@@ -76,17 +82,33 @@ def knn(ISBN):
         return jsonify({"err"})
 
 
-@app.route('/svd/<title>')
-def svd(title):
-    book_titles = SVDPivot.columns
+@app.route('/svd/<ISBN>')
+def svd(ISBN):
+    book_ISBNs = SVDPivot.columns
 
-    book_list = list(book_titles)
-    index = book_list.index(title.replace("%20", " "))
+    book_list = list(book_ISBNs)
+    index = book_list.index(ISBN)
 
-    test = list(book_titles[(corr[index] < 1.0)
-                            & (corr[index] > 0.9)])[1:5]
+    recom_ISBNs = list(book_ISBNs[(corr[index] < 1.0)
+                                  & (corr[index] > 0.9)])[1:5]
 
-    return jsonify(test)
+    books = []
+
+    for isbn in recom_ISBNs:
+        book = RatingCountDF.loc[RatingCountDF['ISBN'] == isbn][:1].to_dict()
+
+        books.append({
+            "title": list(book.get("Title").items())[0][1],
+            "author": list(book.get("Author").items())[0][1],
+            "isbn": list(book.get("ISBN").items())[0][1],
+            "image": list(book.get("Image").items())[0][1],
+            "category": list(book.get("Category").items())[0][1][2:-2],
+            "rating": list(book.get("Rating").items())[0][1],
+            "ratingCount": list(book.get("RatingCount").items())[0][1],
+            "yearOfPublication": list(book.get("YearOfPublication").items())[0][1]
+        })
+
+    return jsonify(books)
 
 
 if __name__ == '__main__':
