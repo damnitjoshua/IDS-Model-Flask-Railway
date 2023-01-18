@@ -9,16 +9,9 @@ import warnings
 app = Flask(__name__)
 
 model = load("model/knn_bookRecom_model.sav")
-# Rating count more than 50
-# csv_url = "https://drive.google.com/file/d/1tIxt00bOAPEKRkc57uuBhPZGDLBwsvJc/view?usp=share_link"
-# csv_url = 'https://drive.google.com/uc?id=' + csv_url.split('/')[-2]
+
 RatingCountDF = pd.read_csv("data/RatingCountDF.csv")
 
-
-# pivot_url = "https://drive.google.com/file/d/1fmmByHYX0xBDgZCZkMCMS-zWWnlK-Cij/view?usp=share_link"
-# pivot_url = 'https://drive.google.com/uc?id=' + pivot_url.split('/')[-2]
-
-# RatingCountDFPivot = pd.read_csv('data/RatingCountDFPivotDF1.csv')
 RatingCountDFPivot = RatingCountDF.pivot(
     index='ISBN', columns='UserID', values='Rating').fillna(0)
 
