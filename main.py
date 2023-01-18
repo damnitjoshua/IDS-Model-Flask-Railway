@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 from joblib import load
+from sklearn.decomposition import TruncatedSVD
+import warnings
 
 app = Flask(__name__)
 
@@ -19,6 +21,15 @@ RatingCountDF = pd.read_csv("data/RatingCountDF.csv")
 # RatingCountDFPivot = pd.read_csv('data/RatingCountDFPivotDF1.csv')
 RatingCountDFPivot = RatingCountDF.pivot(
     index='ISBN', columns='UserID', values='Rating').fillna(0)
+
+SVDPivot = RatingCountDF.pivot(
+    index='UserID', columns='Title', values='Rating').fillna(0)
+
+SVD = TruncatedSVD(n_components=12, random_state=17)
+matrix = SVD.fit_transform(SVDPivot.values.T)
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+corr = np.corrcoef(matrix)
 
 
 @app.route('/')
@@ -70,6 +81,19 @@ def knn(ISBN):
         return jsonify(books[::-1])
     except:
         return jsonify({"err"})
+
+
+@app.route('/svd/<title>')
+def svd(title):
+    book_titles = SVDPivot.columns
+
+    book_list = list(book_titles)
+    index = book_list.index(title.replace("%20", " "))
+
+    test = list(book_titles[(corr[index] < 1.0)
+                            & (corr[index] > 0.9)])[1:5]
+
+    return jsonify(test)
 
 
 if __name__ == '__main__':
