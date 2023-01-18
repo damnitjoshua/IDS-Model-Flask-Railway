@@ -6,14 +6,25 @@ from joblib import load
 
 app = Flask(__name__)
 
-# Rating count more than 50
-csv_url = "https://drive.google.com/file/d/1tIxt00bOAPEKRkc57uuBhPZGDLBwsvJc/view?usp=share_link"
-csv_url = 'https://drive.google.com/uc?id=' + csv_url.split('/')[-2]
-RatingCountDF = pd.read_csv(csv_url)
 
-pivot_url = "https://drive.google.com/file/d/1f1VxuzoHvbjeizxSY8G_EVSjEC4MfbGw/view?usp=share_link"
-pivot_url = 'https://drive.google.com/uc?id=' + pivot_url.split('/')[-2]
-RatingCountDFPivot = pd.read_csv(pivot_url)
+def init():
+    model = load("model/knn_bookRecom_model.sav")
+    # Rating count more than 50
+    csv_url = "https://drive.google.com/file/d/1tIxt00bOAPEKRkc57uuBhPZGDLBwsvJc/view?usp=share_link"
+    csv_url = 'https://drive.google.com/uc?id=' + csv_url.split('/')[-2]
+    RatingCountDF = pd.read_csv(csv_url)
+
+    # pivot_url = "https://drive.google.com/file/d/1fmmByHYX0xBDgZCZkMCMS-zWWnlK-Cij/view?usp=share_link"
+    # pivot_url = 'https://drive.google.com/uc?id=' + pivot_url.split('/')[-2]
+    # RatingCountDFPivot = pd.read_csv("data/RatingCountDFPivotDF1.csv")
+
+    RatingCountDFPivot = RatingCountDF.pivot(
+        index='ISBN', columns='UserID', values='Rating').fillna(0)
+
+    return model, RatingCountDF, RatingCountDFPivot
+
+
+model, RatingCountDF, RatingCountDFPivot = init()
 
 
 @app.route('/')
@@ -44,7 +55,6 @@ def random(count):
 
 @app.route('/knn/<ISBN>')
 def knn(ISBN):
-    model = load("model/knn_bookRecom_model.sav")
     search = RatingCountDFPivot.loc[ISBN]
 
     distances, indices = model.kneighbors(
