@@ -30,6 +30,25 @@ def index():
     return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
 
 
+@app.route('/book/<ISBN>')
+def book(ISBN):
+    book = RatingCountDF.loc[RatingCountDF['ISBN'] == ISBN][:1].to_dict()
+
+    book = {
+        "title": list(book.get("Title").items())[0][1],
+        "author": list(book.get("Author").items())[0][1],
+        "publisher": list(book.get("Publisher").items())[0][1],
+        "isbn": list(book.get("ISBN").items())[0][1],
+        "image": list(book.get("Image").items())[0][1],
+        "category": list(book.get("Category").items())[0][1][2:-2],
+        "rating": list(book.get("Rating").items())[0][1],
+        "ratingCount": list(book.get("RatingCount").items())[0][1],
+        "yearOfPublication": list(book.get("YearOfPublication").items())[0][1]
+    }
+
+    return jsonify(book)
+
+
 @app.route('/random/<count>')
 def random(count):
     books = []
@@ -40,6 +59,7 @@ def random(count):
         books.append({
             "title": book['Title'],
             "author": book['Author'],
+            "publisher": book['Publisher'],
             "isbn": book['ISBN'],
             "image": book['Image'],
             "category": book["Category"][2:-2],
@@ -68,6 +88,7 @@ def knn(ISBN):
                 books.append({
                     "title": book['Title'],
                     "author": book['Author'],
+                    "publisher": book['Publisher'],
                     "isbn": book['ISBN'],
                     "image": book['Image'],
                     "category": book["Category"][2:-2],
@@ -100,6 +121,7 @@ def svd(ISBN):
         books.append({
             "title": list(book.get("Title").items())[0][1],
             "author": list(book.get("Author").items())[0][1],
+            "publisher": list(book.get("Publisher").items())[0][1],
             "isbn": list(book.get("ISBN").items())[0][1],
             "image": list(book.get("Image").items())[0][1],
             "category": list(book.get("Category").items())[0][1][2:-2],
