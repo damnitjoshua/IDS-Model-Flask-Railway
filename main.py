@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 from joblib import load
+import requests
+from io import StringIO
 
 app = Flask(__name__)
 
@@ -12,6 +14,9 @@ def init():
     # Rating count more than 50
     csv_url = "https://drive.google.com/file/d/1tIxt00bOAPEKRkc57uuBhPZGDLBwsvJc/view?usp=share_link"
     csv_url = 'https://drive.google.com/uc?id=' + csv_url.split('/')[-2]
+    csv_url = requests.get(csv_url).text
+    csv_url = StringIO(csv_url)
+
     RatingCountDF = pd.read_csv(csv_url)
 
     # pivot_url = "https://drive.google.com/file/d/1fmmByHYX0xBDgZCZkMCMS-zWWnlK-Cij/view?usp=share_link"
